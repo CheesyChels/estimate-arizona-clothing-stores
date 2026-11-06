@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device, initial-scale=1,0"
+<title>Estimate Arizona</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            color: #263238;
+        }
+
+        header {
+            background: #17324d;
+            color: white;
+            padding: 35px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 35px auto;
+            padding: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .business-card {
+            background: white;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        .business-card a {
+            color: #1769aa;
+        }
+        /* Improved search and filter controls */
+.search-box {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background: white;
+}
+
+/* Results counter */
+#resultCount {
+    color: #475569;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 18px 0;
+}
+
+/* Business cards */
+.business-card {
+    background: white;
+    padding: 24px;
+    margin-bottom: 18px;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.business-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.business-card h3 {
+    margin-top: 0;
+    color: #1e293b;
+}
+
+.business-card a {
+    color: #1670c5;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.business-card a:hover {
+    text-decoration: underline;
+}
+    </style>
+    
+</head>
+<body>
+
+    <header>
+        <h1>Estimate Arizona</h1>
+        <p>Explore clothing businesses across Phoenix, Arizona</p>
+    </header>
+
+    <main>
+        <h2>Business Directory</h2>
+        <p>Search businesses collected for our project.</p>
+
+       <select id="areaFilter" class="search-box">
+    <option value="">All Search Areas</option>
+</select>
+<select id="sortOrder" class="search-box">
+    <option value="az">Sort: A–Z</option>
+    <option value="za">Sort: Z–A</option>
+</select>
+
+<input
+    class="search-box"
+    type="text"
+    id="searchInput"
+    placeholder="Search for a business..."
+>
+<p id="resultCount"></p>
+        <div id="businessResults"></div>
+    </main>
+
+    <script>
+        let businesses = [];
+
+        const results = document.getElementById("businessResults");
+        const searchInput = document.getElementById("searchInput");
+        const areaFilter = document.getElementById("areaFilter");
+        const resultCount = document.getElementById("resultCount");
+        const sortOrder = document.getElementById("sortOrder");
+
+        function displayBusinesses(searchTerm = "") {
+            results.innerHTML = "";
+
+           const filteredBusinesses = businesses.filter(business => {
+    const matchesName = business.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesArea = areaFilter.value === "" || business.area === areaFilter.value;
+
+    return matchesName && matchesArea;
+});
+resultCount.textContent = `${filteredBusinesses.length} ${filteredBusinesses.length === 1 ? "business" : "businesses"} found`;
+const sortedBusinesses = [...filteredBusinesses].sort((a, b) => {
+    const comparison = a.name.localeCompare(b.name);
+    return sortOrder.value === "za" ? -comparison : comparison;
+});
+
+            sortedBusinesses.forEach(business => {
+                const card = document.createElement("div");
+                card.className = "business-card";
+
+                card.innerHTML = `
+                    <h3>${business.name}</h3>
+                    <p>${business.address}</p>
+                    <p>${business.area}</p>
+                    <a href="${business.map}" target="_blank">
+                        View on Google Maps
+                    </a>
+                `;
+
+                results.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener("input", () => {
+            displayBusinesses(searchInput.value);
+        });
+        areaFilter.addEventListener("change", () => {
+    displayBusinesses(searchInput.value);
+});
+sortOrder.addEventListener("change", () => {
+    displayBusinesses(searchInput.value);
+});
+
+        displayBusinesses();
+        fetch("./places.json")
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Could not load places.json");
+        }
+        return response.json();
+    })
+    .then(data => {
+    businesses = data;
+
+    const areas = [...new Set(businesses.map(business => business.area))];
+
+    areas.sort().forEach(area => {
+        const option = document.createElement("option");
+        option.value = area;
+        option.textContent = area;
+        areaFilter.appendChild(option);
+    });
+
+    displayBusinesses();
+})
+    .catch(error => {
+        console.error(error);
+        results.innerHTML = "<p>Could not load business data.</p>";
+    });
+    </script>
+
+</body>
+</html>
